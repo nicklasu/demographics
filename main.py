@@ -13,6 +13,7 @@ human_data = {
     'infant_mortality': 0.0065,
     'hazard_function': 1.085
 }
+# https://www.oecd.org/els/soc/SF_2_3_Age_mothers_childbirth.pdf
 births_per_1000 = {
     19: 10,
     24: 10,
