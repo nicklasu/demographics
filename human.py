@@ -7,7 +7,7 @@ class Human:
     age = 0
     mortality = 0
     is_alive = bool
-    female = bool
+    is_female = bool
 
     def __init__(self, human_data):
         self.hazard_function = human_data['hazard_function']
@@ -15,7 +15,7 @@ class Human:
         if human_data['infant_mortality'] > random.random():
             self.is_alive = False
         if random.random() > 0.50:
-            self.female = True
+            self.is_female = False
 
     # Check and increase mortality.
     def get_older(self):
