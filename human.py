@@ -7,7 +7,11 @@ class Human:
     age = 0
     mortality = 0
     is_alive = bool
-    is_female = bool
+    # Gender identity
+    # Further development: increase the amount of different gender identities
+    is_woman = bool
+    # Fertility check
+    is_fertile = bool
 
     def __init__(self, human_data):
         self.hazard_function = human_data['hazard_function']
@@ -15,9 +19,10 @@ class Human:
         if human_data['infant_mortality'] > random.random():
             self.is_alive = False
         if random.random() > 0.50:
-            self.is_female = False
+            self.is_woman = False
+        self.is_fertile = False
 
-    # Check and increase mortality.
+    # Check and increase mortality and check for fertility etc.
     def get_older(self):
         if self.is_alive:
             if self.mortality > random.random():
@@ -25,3 +30,9 @@ class Human:
                 return  # If a human dies while trying to get older, we don't want to raise their age.
             self.age += 1
             self.mortality *= self.hazard_function
+            # Women who are between ages 15 and 44 are fertile
+            if self.is_woman:
+                if self.age > 14:
+                    self.is_fertile = True
+                if self.age > 44:
+                    self.is_fertile = False

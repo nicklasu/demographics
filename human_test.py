@@ -37,16 +37,27 @@ class TestHuman(unittest.TestCase):
         self.assertEqual(human.is_alive, 0)
         self.assertEqual(human.age, 0)
 
-    # Supposed to test births when implemented. Now pointless.
-    def test_female(self):
+    # Test fertility ages
+    def test_fertility(self):
         human_data = {
             'mortality': 0.0000,
             'infant_mortality': 0.0000,
             'hazard_function': 0
         }
         human = Human(human_data)
-        human.is_female = True
-        self.assertEqual(human.is_female, True)
+        human.is_woman = True
+        for x in range(15):
+            self.assertEqual(human.is_fertile, False)
+            human.get_older()
+        print("Test 1 for fertility passed...")
+        for x in range(40):
+            if human.age <= 44:
+                self.assertEqual(human.is_fertile, True)
+            human.get_older()
+        print("Test 2 for fertility passed...")
+        for x in range(40):
+            self.assertEqual(human.is_fertile, False)
+        print("Test 3 for fertility passed...")
 
 
 if __name__ == '__main__':
