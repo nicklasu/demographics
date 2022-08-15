@@ -15,22 +15,25 @@ human_data = {
 }
 # https://www.oecd.org/els/soc/SF_2_3_Age_mothers_childbirth.pdf
 # Can be expanded if wanted to include age brackets.
-# Example of age brackets where you can fine-tune birth rate:
-""""
+# The simulation takes the lowest number that is higher or same as the current age.
+# Example of age brackets where you can fine-tune birth rate for each bracket:
+"""
 births_per_1000 = {
-    19: 10,
-    24: 10,
-    29: 10,
-    34: 10,
-    39: 10,
-    44: 10,
-    49: 10
+    19: 5,  # 15-19
+    24: 40,  # 20-24
+    29: 80,  # 25-29
+    34: 80,  # 30-34
+    39: 30,  # 35-39
+    44: 10,  # 40-44
+    49: 3  # 45-49
 }
 """
 
 births_per_1000 = {
-    # Oldest age is 44 and the second number is for 16-44 age bracket.
-    # For example US birthrate for Women ages 15-44 is 56.0 for year 2020.
+    # The number on the left is the oldest age (44) that a person is fertile in this simulation.
+    # Simulation expects that the youngest fertile person is 15, and it doesn't need to be stated.
+    # Right number is the number of births per 1000 for 15-44 age bracket.
+    # For example US birthrate for fertile people between ages of 15-44 is 56.0 for year 2020.
     44: 56,
 }
 
@@ -40,60 +43,65 @@ if __name__ == '__main__':
     print("Median (Middle value of the dataset)")
     print("Mode (Value that occurs the highest number of times)\n")
     autoplay_turns = 0
-    all_people = []
+    population = []
+    population_history = []
     # Create a human cohort
-    for x in range(100):
+    for x in range(100_000):
         human = Human(human_data)
-        all_people.append(human)
+        population.append(human)
 
     # range == years
-    for y in range(10_000):
+    for y in range(100_000):
         # Make everyone in the cohort a year older
-        for x in range(all_people.__len__()):
-            all_people[x].get_older()
+        for x in range(population.__len__()):
+            population[x].get_older()
             # Birthrate randomizer
-            if all_people[x].is_fertile:  # Check that the person is fertile
-                for z in births_per_1000:  # Loop if user wanted to simulate birthrates more accurately
-                    if random.randint(0, 1000) <= births_per_1000.get(z):  # If a birth happens, add a new human
-                        all_people.append(Human(human_data))
+            if population[x].is_fertile:  # Check that the person is fertile
+                for b in births_per_1000:  # Loop if user wanted to simulate birthrates more accurately
+                    if random.randint(0, 1000) <= births_per_1000.get(b):  # If a birth happens, add a new human
+                        population.append(Human(human_data))
                     break
-        all_people.sort(key=lambda h: h.age)
-
-        alive_people = []
-        alive_women = []
-        age_list = []
-        death_list = []
-        all_women_list = []
-        fertile_people = []
 
         # TODO increase efficiency of this loop
-        for z in range(all_people.__len__()):
-            if all_people[z].is_alive:
-                age_list.append(all_people[z].age)
-            if not all_people[z].is_alive:
-                death_list.append(all_people[z].age)
-            if all_people[z].is_woman:
-                all_women_list.append(all_people[z])
-            if all_people[z].is_alive:
-                alive_people.append(all_people[z])
-                if all_people[z].is_woman:
-                    alive_women.append(all_people[z])
-                if all_people[z].is_fertile:
-                    fertile_people.append(all_people[z])
-        # counter = collections.Counter(age_list)
+        for z in range(population.__len__()):
+            if not population[z].is_alive:
+                population[z].death_year = y
+                population_history.append(population[z])
+
+        population[:] = (h for h in population if h.is_alive)
+
         print("Year: ", y, "\n")
-        print("Mean age of population: ", statistics.mean(age_list))
-        print("Median age of population: ", statistics.median(age_list))
-        print("Mode age of population: ", statistics.mode(age_list), "\n")
-        if death_list:
-            print("Mean age at death: ", statistics.mean(death_list))
-            print("Median age at death: ", statistics.median(death_list))
-            print("Mode age at death: ", statistics.mode(death_list), "\n")
-        print("Total number of alive people: ", alive_people.__len__())
-        print("Total number of alive women: ", alive_women.__len__())
-        print("Total number of alive fertile people: ", fertile_people.__len__(), "\n")
+        print("Total number of alive people: ", population.__len__())
+
         autoplay_turns = autoplay_turns - 1
         if autoplay_turns < 0:
+            ages_now = []
+            ages_at_death = []
+            fertile_people = []
+
+            # TODO increase efficiency of this loop
+            for z in range(population.__len__()):
+                if not population[z].is_alive:
+                    ages_at_death.append(population[z].age)
+                    # population.remove(population[z])
+
+            # population[:] = (x for x in population if x.is_alive)
+
+            for z in range(population.__len__()):
+                ages_now.append(population[z].age)
+                if population[z].is_fertile:
+                    fertile_people.append(population[z])
+
+            # counter = collections.Counter(age_list)
+            print("Mean age of population: ", statistics.mean(ages_now))
+            print("Median age of population: ", statistics.median(ages_now))
+            print("Mode age of population: ", statistics.mode(ages_now), "\n")
+            if ages_at_death:
+                print("Mean age at death: ", statistics.mean(ages_at_death))
+                print("Median age at death: ", statistics.median(ages_at_death))
+                print("Mode age at death: ", statistics.mode(ages_at_death), "\n")
+            # print("Total number of alive people: ", population.__len__())
+            print("Total number of alive fertile people: ", fertile_people.__len__(), "\n")
             print("Enter number of autoplay turns or")
             print("Press <ENTER> to end turn...")
             input_a = input()
