@@ -12,7 +12,6 @@ class Human:
     is_woman = bool
     # Fertility check
     is_fertile = bool
-    death_year = None
 
     def __init__(self, human_data):
         self.hazard_function = human_data['hazard_function']

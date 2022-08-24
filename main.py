@@ -2,7 +2,9 @@
 
 # import collections
 import random
+from multiprocessing import Process
 
+import file_handler
 # import matplotlib.pyplot as plt
 import statistics
 from human import Human
@@ -37,6 +39,7 @@ births_per_1000 = {
     44: 56,
 }
 
+
 if __name__ == '__main__':
     print("Explanations: ")
     print("Mean (Average)")
@@ -44,34 +47,69 @@ if __name__ == '__main__':
     print("Mode (Value that occurs the highest number of times)\n")
     autoplay_turns = 0
     population = []
-    population_history = []
-    # Create a human cohort
-    for x in range(100_000):
-        human = Human(human_data)
-        population.append(human)
+    # population_history = []
+    print("Choose 1 for generating your own population range")
+    # print("Choose 2 for pre-made population range")
+    print("Choose 3 for previously user-generated population range")
+    ask_for_choice = input()
+    try:
+        choice = int(ask_for_choice)
+        if choice == 1:
+            # Create a human cohort
+            print("Enter size of the population:")
+            size_of_pop = input()
+            for x in range(int(size_of_pop)):
+                population.append(Human(human_data))
+                print(x)
+        # if choice == 2:
+        #    population = file_handler.load_object("pref.pickle")
+        if choice == 3:
+            population = file_handler.load_object("user.pickle")
+    except ValueError:
+        print("Just one more turn...\n")
 
-    # range == years
-    for y in range(100_000):
+
+    def make_older(p, r):
         # Make everyone in the cohort a year older
-        for x in range(population.__len__()):
-            population[x].get_older()
+        for p in range(r):
+            population[p].get_older()
             # Birthrate randomizer
-            if population[x].is_fertile:  # Check that the person is fertile
+            if population[p].is_fertile:  # Check that the person is fertile
                 for b in births_per_1000:  # Loop if user wanted to simulate birthrates more accurately
                     if random.randint(0, 1000) <= births_per_1000.get(b):  # If a birth happens, add a new human
                         population.append(Human(human_data))
                     break
 
-        # TODO increase efficiency of this loop
-        for z in range(population.__len__()):
-            if not population[z].is_alive:
-                population[z].death_year = y
-                population_history.append(population[z])
 
-        population[:] = (h for h in population if h.is_alive)
+    def make_older2(p, r):
+        # Make everyone in the cohort a year older
+        for p in range(r):
+            population[p].get_older()
+            # Birthrate randomizer
+            if population[p].is_fertile:  # Check that the person is fertile
+                for b in births_per_1000:  # Loop if user wanted to simulate birthrates more accurately
+                    if random.randint(0, 1000) <= births_per_1000.get(b):  # If a birth happens, add a new human
+                        population.append(Human(human_data))
+                    break
 
-        print("Year: ", y, "\n")
-        print("Total number of alive people: ", population.__len__())
+
+    # save_object(population)
+    # range == years
+    for y in range(100_000):
+        prc1 = Process(target=make_older(0, int(population.__len__() / 2 - 1)))
+        prc2 = Process(target=make_older2(int(population.__len__() / 2), int(population.__len__() / 2)))
+        prc1.start()
+        prc2.start()
+        prc1.join()
+        prc2.join()
+        # for z in range(population.__len__()):
+        #    if not population[z].is_alive:
+        #        population[z].death_year = y
+        #        population_history.append(population[z])
+        if autoplay_turns > 0:
+            # population[:] = (h for h in population if h.is_alive)
+            print("Year: ", y, "\n")
+            print("Total number of alive people: ", population.__len__())
 
         autoplay_turns = autoplay_turns - 1
         if autoplay_turns < 0:
@@ -79,20 +117,18 @@ if __name__ == '__main__':
             ages_at_death = []
             fertile_people = []
 
-            # TODO increase efficiency of this loop
-            for z in range(population.__len__()):
-                if not population[z].is_alive:
-                    ages_at_death.append(population[z].age)
-                    # population.remove(population[z])
-
-            # population[:] = (x for x in population if x.is_alive)
-
+            for z in population:
+                if not z.is_alive:
+                    ages_at_death.append(z.age)
+                    population.remove(z)
             for z in range(population.__len__()):
                 ages_now.append(population[z].age)
                 if population[z].is_fertile:
                     fertile_people.append(population[z])
 
             # counter = collections.Counter(age_list)
+            print("Year: ", y, "\n")
+            print("Total number of alive people: ", population.__len__())
             print("Mean age of population: ", statistics.mean(ages_now))
             print("Median age of population: ", statistics.median(ages_now))
             print("Mode age of population: ", statistics.mode(ages_now), "\n")
@@ -102,13 +138,17 @@ if __name__ == '__main__':
                 print("Mode age at death: ", statistics.mode(ages_at_death), "\n")
             # print("Total number of alive people: ", population.__len__())
             print("Total number of alive fertile people: ", fertile_people.__len__(), "\n")
+            print("Enter 's' for saving the current situation or")
             print("Enter number of autoplay turns or")
             print("Press <ENTER> to end turn...")
             input_a = input()
             try:
+                if input_a == "s":
+                    file_handler.save_object(population, "user.pickle")
                 autoplay_turns = int(input_a)
             except ValueError:
                 print("Just one more turn...\n")
+            print("Loading...")
 
         """
         figure, axis = plt.subplots(2, 2)
